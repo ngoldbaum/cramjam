@@ -126,6 +126,9 @@ jobs:
           python -m pip install cramjam --pre --no-index --find-links dist --force-reinstall
 
           python -m pytest -vs --benchmark-skip
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
 
       # Could use 'distro: alpine_latest' in 'run-on-arch-action' but seems difficult to install a specific version of python
       # so we'll just use existing python alpine images to test import and cli use w/o testing archs other than x86_64
