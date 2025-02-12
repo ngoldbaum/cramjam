@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - 'releases/**'
+      - debug-ci
   pull_request:
   release:
     types:
