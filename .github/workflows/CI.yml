@@ -70,12 +70,15 @@ jobs:
       fail-fast: ${{ !( startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/tags/') ) }}
       matrix:
         python-version: 
-          - '3.8'
-          - '3.9'
-          - '3.10'
-          - '3.11'
-          - '3.12'
-          - '3.13'
+          # - '3.8'
+          # - '3.9'
+          # - '3.10'
+          # - '3.11'
+          # - '3.12'
+          # - '3.13'
+          # 3.13t is unsupported
+          - '3.14'
+          - '3.14t'
         conf:
           - { os: ubuntu-latest, target: x86_64,  target-triple: x86_64-unknown-linux-gnu,             manylinux: auto }
           - { os: ubuntu-latest, target: x86_64,  target-triple: x86_64-unknown-linux-musl,            manylinux: musllinux_1_1 }
@@ -97,46 +100,47 @@ jobs:
           - { os: windows-latest, target: x86_64, target-triple: x86_64-pc-windows-msvc, python-architecture: x64 }
           - { os: windows-latest, target: i686,   target-triple: i686-pc-windows-msvc,   python-architecture: x86 }
 
-        include:
-          # Windows x86_64 pypy
-          - conf: { os: windows-latest, target: x86_64,  target-triple: x86_64-pc-windows-msvc }
-            python-version: pypy3.10
-          - conf: { os: windows-latest, target: x86_64,  target-triple: x86_64-pc-windows-msvc }
-            python-version: pypy3.11
+        # include:
+        #   # Windows x86_64 pypy
+        #   - conf: { os: windows-latest, target: x86_64,  target-triple: x86_64-pc-windows-msvc }
+        #     python-version: pypy3.10
+        #   - conf: { os: windows-latest, target: x86_64,  target-triple: x86_64-pc-windows-msvc }
+        #     python-version: pypy3.11
 
-          # Linux x86_64 pypy
-          - conf: { os: ubuntu-latest, target: x86_64,  target-triple: x86_64-unknown-linux-gnu, manylinux: auto }
-            python-version: pypy3.10
-          - conf: { os: ubuntu-latest, target: x86_64,  target-triple: x86_64-unknown-linux-gnu, manylinux: auto }
-            python-version: pypy3.11
+        #   # Linux x86_64 pypy
+        #   - conf: { os: ubuntu-latest, target: x86_64,  target-triple: x86_64-unknown-linux-gnu, manylinux: auto }
+        #     python-version: pypy3.10
+        #   - conf: { os: ubuntu-latest, target: x86_64,  target-triple: x86_64-unknown-linux-gnu, manylinux: auto }
+        #     python-version: pypy3.11
 
-          # Linux arm pypy
-          - conf: { os: ubuntu-latest, target: aarch64,  target-triple: aarch64-unknown-linux-gnu, manylinux: auto }
-            python-version: pypy3.10
-          - conf: { os: ubuntu-latest, target: aarch64,  target-triple: aarch64-unknown-linux-gnu, manylinux: auto }
-            python-version: pypy3.11
+        #   # Linux arm pypy
+        #   - conf: { os: ubuntu-latest, target: aarch64,  target-triple: aarch64-unknown-linux-gnu, manylinux: auto }
+        #     python-version: pypy3.10
+        #   - conf: { os: ubuntu-latest, target: aarch64,  target-triple: aarch64-unknown-linux-gnu, manylinux: auto }
+        #     python-version: pypy3.11
 
-          # OSX x86_64 pypy
-          - conf: { os: macos-13, target: x86_64,  target-triple: x86_64-apple-darwin }
-            python-version: pypy3.10
-          - conf: { os: macos-13, target: x86_64,  target-triple: x86_64-apple-darwin }
-            python-version: pypy3.11
+        #   # OSX x86_64 pypy
+        #   - conf: { os: macos-13, target: x86_64,  target-triple: x86_64-apple-darwin }
+        #     python-version: pypy3.10
+        #   - conf: { os: macos-13, target: x86_64,  target-triple: x86_64-apple-darwin }
+        #     python-version: pypy3.11
 
-          # OSX universal2 pypy
-          - conf: { os: macos-13, target: universal2,  target-triple: x86_64-apple-darwin }
-            python-version: pypy3.10
-          - conf: { os: macos-13, target: universal2,  target-triple: x86_64-apple-darwin }
-            python-version: pypy3.11
+        #   # OSX universal2 pypy
+        #   - conf: { os: macos-13, target: universal2,  target-triple: x86_64-apple-darwin }
+        #     python-version: pypy3.10
+        #   - conf: { os: macos-13, target: universal2,  target-triple: x86_64-apple-darwin }
+        #     python-version: pypy3.11
 
-          # OSX arm pypy
-          - conf: { os: macos-13, target: aarch64,  target-triple: aarch64-apple-darwin }
-            python-version: pypy3.10
-          - conf: { os: macos-13, target: aarch64,  target-triple: aarch64-apple-darwin }
-            python-version: pypy3.11
+        #   # OSX arm pypy
+        #   - conf: { os: macos-13, target: aarch64,  target-triple: aarch64-apple-darwin }
+        #     python-version: pypy3.10
+        #   - conf: { os: macos-13, target: aarch64,  target-triple: aarch64-apple-darwin }
+        #     python-version: pypy3.11
           
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
+        id: pysetup
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.conf.python-architecture }}
@@ -183,13 +187,13 @@ jobs:
           python -m pip install cramjam[dev] --pre --find-links dist --force-reinstall
           python -m pip install cramjam --pre --no-index --find-links dist --force-reinstall
 
-          python -m pytest -vs --benchmark-skip -n0 --dist no
+          # remove --assert='plain' when https://github.com/HypothesisWorks/hypothesis/issues/4267 is fixed
+          python -m pytest --assert='plain' -vs --benchmark-skip -n0 --dist no
 
       # Could use 'distro: alpine_latest' in 'run-on-arch-action' but seems difficult to install a specific version of python
       # so we'll just use existing python alpine images to test import and cli use w/o testing archs other than x86_64
       - name: Install built wheel and Test (musllinux)
-        # TODO: python:3.13-alpine doesn't exist yet
-        if: startsWith(matrix.conf.manylinux, 'musl') && matrix.conf.target == 'x86_64' && matrix.python-version != '3.13'
+        if: startsWith(matrix.conf.manylinux, 'musl') && matrix.conf.target == 'x86_64' && ( ! startsWith(matrix.python-version, '3.14'))
         run: |
           docker run \
             -v $(pwd)/dist:/wheels \
